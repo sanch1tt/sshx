@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: sshx
+    env: docker
+    plan: free
+    dockerfilePath: Dockerfile
+    buildCommand: ""
+    startCommand: ./sshx serve
+    autoDeploy: true
