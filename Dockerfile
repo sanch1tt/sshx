@@ -1,6 +1,11 @@
 # Use official Rust image
 FROM rust:1.78 as builder
 
+# Install build dependencies (including protoc)
+RUN apt-get update && \
+    apt-get install -y protobuf-compiler pkg-config libssl-dev build-essential && \
+    apt-get clean
+
 WORKDIR /app
 COPY . .
 
