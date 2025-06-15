@@ -1,7 +1,19 @@
 FROM alpine:latest
 
-# Install curl and bash (sh is fine but some scripts need bash)
-RUN apk --no-cache add curl bash
+# Install necessary packages
+RUN apk --no-cache add bash curl python3 py3-pip
 
-# Run the sshx install+run script
-CMD curl -sSf https://sshx.io/get | sh -s run
+# Install Flask
+RUN pip install flask
+
+# Create working directory
+WORKDIR /app
+
+# Copy your Flask app into the image
+COPY app.py .
+
+# Expose Flask port (Render uses 8080)
+EXPOSE 8080
+
+# Start both Flask and sshx in background
+CMD sh -c "python3 app.py & curl -sSf https://sshx.io/get | sh -s run"
