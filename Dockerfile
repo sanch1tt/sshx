@@ -1,22 +1,23 @@
-FROM rust:alpine AS backend
-WORKDIR /home/rust/src
-RUN apk --no-cache add musl-dev openssl-dev protoc
-RUN rustup component add rustfmt
-COPY . .
-RUN --mount=type=cache,target=/usr/local/cargo/registry \
-    --mount=type=cache,target=/home/rust/src/target \
-    cargo build --release --bin sshx-server && \
-    cp target/release/sshx-server /usr/local/bin
+# Use official Rust image
+FROM rust:1.78 as builder
 
-FROM node:lts-alpine AS frontend
-RUN apk --no-cache add git
-WORKDIR /usr/src/app
+WORKDIR /app
 COPY . .
-RUN npm ci
-RUN npm run build
 
-FROM alpine:latest
-WORKDIR /root
-COPY --from=frontend /usr/src/app/build build
-COPY --from=backend /usr/local/bin/sshx-server .
-CMD ["./sshx-server", "--listen", "::"]
+# Build the sshx binary
+RUN cargo install --path crates/sshx --locked
+
+# Use minimal runtime image
+FROM debian:bullseye-slim
+
+# Create a non-root user
+RUN useradd -m appuser
+USER appuser
+
+COPY --from=builder /usr/local/cargo/bin/sshx /usr/local/bin/sshx
+
+# Expose default port
+EXPOSE 3000
+
+# Start the sshx server
+CMD ["sshx", "serve"]
