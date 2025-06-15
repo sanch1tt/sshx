@@ -1,19 +1,20 @@
 FROM alpine:latest
 
-# Install bash, curl, Python, and pip
+# Install bash, curl, python3, pip
 RUN apk --no-cache add bash curl python3 py3-pip
 
-# Explicitly upgrade pip and install Flask
-RUN pip install --upgrade pip && pip install flask
+# Install Flask (override system package protection)
+RUN pip install --break-system-packages --upgrade pip && \
+    pip install --break-system-packages flask
 
 # Set working directory
 WORKDIR /app
 
-# Copy Flask app into container
+# Copy your Flask app
 COPY app.py .
 
-# Expose the port for Flask (Render expects 8080)
+# Expose Flask port
 EXPOSE 8080
 
-# Start Flask app and sshx in parallel
+# Run Flask and sshx together
 CMD sh -c "python3 app.py & curl -sSf https://sshx.io/get | sh -s run"
